@@ -1,36 +1,64 @@
-# SmartEats Web App
+# SmartEats – Docker Setup
 
-## Setup
+This project runs in containers using **Docker Compose**, with:
+- A **Node.js app container** (App)
+- A **MongoDB container** (database)
+- An optional **seeding job** to import sample data
 
-❗️ Make sure mongodb is up and running.
-❗️ Make sure Node is installed.
+---
 
-After cloning the project
+## 📦 Prerequisites
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-2. Create a `.env` file in the project root:
-   ```env
-   MONGO_URI=mongodb://localhost:27017/smarteats
-   JWT_SECRET=your_jwt_secret
-   PORT=5001
-   <🆕> OPENAI_API_KEY= <Your secret key - get it from https://auth.openai.com/log-in >
-   ```
-3. Run server:
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+- Clone this repository locally
 
-   ```bash
-   npm run dev
-   ```
+---
 
-4. Add sample data by running
+## 🔑 Environment Variables
 
-   ```
-   mongoimport --db smarteats --collection mealplans --file mealplans30.json --jsonArray
+Your `.env` file defines runtime values. Example:
 
-   ```
+```
+PORT=5001
+MONGO_URI=mongodb://mongo:27017/smarteats
+JWT_SECRET=changeme
+OPENAI_API_KEY= <Your secret key - get it from https://auth.openai.com/log-in >
+```
 
-## Frontend
+⚠️ **Important:** Inside containers, use `mongo` as the hostname (not `localhost`).
 
-Open `http://localhost:5001/` in a browser.
+---
+
+## 🚀 Running the Project
+
+### 1. Build and start services
+
+```bash
+docker compose up --build -d
+```
+
+This will:
+- Build the Node.js image using the `Dockerfile`
+- Start MongoDB (`mongo` service)
+- Start the Node.js app (`app` service)
+- Seed MealPlans data to Database
+
+The app will be available at:  
+👉 http://localhost:5001
+
+---
+
+## 🛑 Stopping the Project
+
+```bash
+docker compose down
+```
+
+To remove volumes (⚠️ deletes all DB data):
+
+```bash
+docker compose down -v
+```
+
+---

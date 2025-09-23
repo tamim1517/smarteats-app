@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: smarteats-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: smarteats
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  app:
+    build: .
+    container_name: smarteats-app
+    depends_on:
+      mongo:
+        condition: service_healthy
+    # Pass your existing .env into the container
+    env_file:
+      - .env
+    # IMPORTANT: inside containers the host name is "mongo", not "localhost".
+    # Make sure MONGO_URI in .env points to: mongodb://mongo:27017/smarteats
+    ports:
+      - "5001:${PORT:-5001}"
+    restart: unless-stopped
+
+  # One-shot seed job (runs mongoimport once then exits)
+  mongo-seed:
+    image: mongo:7
+    container_name: smarteats-mongo-seed
+    depends_on:
+      mongo:
+        condition: service_healthy
+    volumes:
+      # mount your JSON file into the seeder container
+      - ./mealplans30.json:/seed/mealplans30.json:ro
+    command: ["bash","-lc","mongoimport --host mongo --db smarteats --collection mealplans --file /seed/mealplans30.json --jsonArray"]
+    restart: "no"
+
+volumes:
+  mongo_data:
